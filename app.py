@@ -5,7 +5,6 @@ from bokeh.models import CustomJS
 from streamlit_bokeh_events import streamlit_bokeh_events
 from PIL import Image
 import time
-import glob
 import paho.mqtt.client as paho
 import json
 from gtts import gTTS
@@ -23,8 +22,12 @@ page_style = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
 
-    html, body, [data-testid="stAppViewContainer"] {
-        font-family: 'Poppins', sans-serif;
+    /* Forzar tipografía en todo */
+    html, body, [class*="st-"], [data-testid="stAppViewContainer"] * {
+        font-family: 'Poppins', sans-serif !important;
+    }
+
+    [data-testid="stAppViewContainer"] {
         background: linear-gradient(135deg, #fdf2f8, #f0f4ff, #e7f9f9);
         color: #333;
     }
@@ -66,7 +69,9 @@ page_style = """
         border: none;
         font-weight: 600;
         box-shadow: 0px 4px 10px rgba(126, 87, 194, 0.4);
+        font-family: 'Poppins', sans-serif !important;
     }
+
     div.bk.bk-btn:hover {
         background: linear-gradient(90deg, #64b5f6, #7e57c2);
     }
@@ -77,7 +82,6 @@ st.markdown(page_style, unsafe_allow_html=True)
 # --- CONFIGURACIÓN MQTT ---
 def on_publish(client, userdata, result):
     print("El dato ha sido publicado\n")
-    pass
 
 def on_message(client, userdata, message):
     global message_received
@@ -100,7 +104,6 @@ st.image(image, width=200)
 st.write("🎙️ **Toca el botón y habla**")
 
 stt_button = Button(label="🎧 Inicio", width=200)
-
 stt_button.js_on_event("button_click", CustomJS(code="""
     var recognition = new webkitSpeechRecognition();
     recognition.continuous = true;
@@ -135,7 +138,7 @@ if result:
         client1.on_publish = on_publish
         client1.connect(broker, port)
         message = json.dumps({"Act1": result.get("GET_TEXT").strip()})
-        ret = client1.publish("voice_ctrl", message)
+        client1.publish("voice_ctrl", message)
 
     try:
         os.mkdir("temp")
